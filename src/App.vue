@@ -26,20 +26,19 @@
 import { onMounted, ref } from "vue";
 import logoImg from "./assets/logo-nlw.svg";
 import GameBanner from "./components/GameBanner.vue";
-import type { Game } from "@/types";
+import type { Games } from "@/types";
 import CreateAdBanner from "./components/CreateAdBanner.vue";
 
 onMounted(() => {
   getGames();
 });
 
-const games = ref<Game[]>([]);
+const games = ref<Games[]>([]);
 
 const getGames = async () => {
   fetch("http://localhost:3333/games")
     .then((response) => response.json())
     .then((data) => {
-      console.log(data);
       games.value = data;
     });
 };
