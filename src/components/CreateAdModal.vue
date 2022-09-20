@@ -15,66 +15,18 @@
           <DialogTitle as="h3" class="text-3xl font-black">
             Publique um anúncio
           </DialogTitle>
-          <form class="mt-8 flex flex-col gap-4">
+          <form
+            @submit.prevent="handleCreateAd"
+            class="mt-8 flex flex-col gap-4"
+          >
             <div class="flex flex-col gap-2">
-              <label htmlFor="game"> Qual o game? </label>
-              <Listbox v-model="selectedGame">
-                <div class="relative mt-1">
-                  <ListboxButton
-                    class="relative w-full cursor-default rounded bg-zinc-900 py-3 px-4 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 sm:text-sm"
-                  >
-                    <span
-                      class="block truncate"
-                      :class="selectedGame ? 'text-white' : 'text-zinc-500'"
-                    >
-                      {{ selectedGame ? selectedGame : "Selecione um game" }}
-                    </span>
-                    <span
-                      class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2"
-                    >
-                      <PhCaretDown
-                        class="h-5 w-5 text-gray-400"
-                        aria-hidden="true"
-                      />
-                    </span>
-                  </ListboxButton>
-
-                  <ListboxOptions
-                    class="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm"
-                  >
-                    <ListboxOption
-                      v-slot="{ active, selected }"
-                      v-for="game in games"
-                      :key="game.id"
-                      :value="game.title"
-                      as="template"
-                    >
-                      <li
-                        :class="[
-                          active
-                            ? 'bg-violet-100 text-zinc-900'
-                            : 'text-gray-900',
-                          'relative cursor-default select-none py-2 pl-10 pr-4',
-                        ]"
-                      >
-                        <span
-                          :class="[
-                            selected ? 'font-medium' : 'font-normal',
-                            'block truncate',
-                          ]"
-                          >{{ game.title }}</span
-                        >
-                        <span
-                          v-if="selected"
-                          class="absolute inset-y-0 left-0 flex items-center pl-3 text-violet-600"
-                        >
-                          <PhCheck class="h-5 w-5" aria-hidden="true" />
-                        </span>
-                      </li>
-                    </ListboxOption>
-                  </ListboxOptions>
-                </div>
-              </Listbox>
+              <label htmlFor="game">Qual o game?</label>
+              <FormSelect
+                v-model="selectedGame"
+                :my-arr="games"
+                :filter-by="(data: any) => data.title"
+                placeholder="Selecione um game"
+              />
             </div>
 
             <div class="flex flex-col gap-2">
@@ -108,16 +60,16 @@
 
             <div class="flex gap-6">
               <div class="flex flex-col gap-2">
-                <label htmlFor="weekDays">Quando costuma jogar?</label>
-                <div class="grid grid-cols-4 gap-2">
-                  <button class="w-8 h-8 rounded bg-zinc-900">D</button>
-                  <button class="w-8 h-8 rounded bg-zinc-900">S</button>
-                  <button class="w-8 h-8 rounded bg-zinc-900">T</button>
-                  <button class="w-8 h-8 rounded bg-zinc-900">Q</button>
-                  <button class="w-8 h-8 rounded bg-zinc-900">Q</button>
-                  <button class="w-8 h-8 rounded bg-zinc-900">S</button>
-                  <button class="w-8 h-8 rounded bg-zinc-900">S</button>
-                </div>
+                <label htmlFor="weekDays" className="font-semibold">
+                  Quando costuma jogar?
+                </label>
+                <FormSelectMultiple
+                  v-model="selectedWeekDays"
+                  :my-arr="weekDays"
+                  :filter-by="(data) => data.name"
+                  :filter-value="(data) => data.abbr"
+                  placeholder="Selecione o(s) dia(s)"
+                />
               </div>
               <div class="flex flex-col gap-2 flex-1">
                 <label htmlFor="yearsPlaying"> Qual horário do dia? </label>
@@ -139,14 +91,10 @@
             </div>
 
             <div class="mt-2 flex gap-2 text-sm">
-              <FormInput
-                id="voiceChat"
-                type="checkbox"
-                v-model="data.voiceChannel"
+              <FormCheckbox
+                v-model:checked="isChecked"
+                labelText="Costumo utilizar o voicechat"
               />
-              <span class="font-semibold"
-                >Costumo me conectar ao chat de voz</span
-              >
             </div>
 
             <footer class="mt-4 flex justify-end gap-4">
@@ -176,17 +124,13 @@
 import { ref, onMounted, computed } from "vue";
 import type { Game } from "@/types";
 
-import {
-  Dialog,
-  DialogPanel,
-  DialogTitle,
-  Listbox,
-  ListboxButton,
-  ListboxOptions,
-  ListboxOption,
-} from "@headlessui/vue";
+import { Dialog, DialogPanel, DialogTitle } from "@headlessui/vue";
 
 import FormInput from "./Form/FormInput.vue";
+import FormSelect from "./Form/FormSelect.vue";
+import FormSelectMultiple from "./Form/FormSelectMultiple.vue";
+import FormCheckbox from "./Form/FormCheckbox.vue";
+import axios from "axios";
 
 defineProps<{
   isOpen?: boolean;
@@ -222,10 +166,55 @@ const data = ref({
 });
 
 const selectedGame = ref<string>();
+const selectedWeekDays = ref([]);
+const isChecked = ref<boolean>(false);
 
-const currentSelectedGame = computed(() => {
-  return games.value.find((x) => x.id == selectedGame.value);
-});
+// const currentSelectedGame = computed(() => {
+//   return games.value.find((x) => x.id == selectedGame.value);
+// });
+
+const weekDays = ref([
+  { id: 0, name: "Domingo", abbr: "D" },
+  { id: 1, name: "Segunda-feira", abbr: "S" },
+  { id: 2, name: "Terça-feira", abbr: "T" },
+  { id: 3, name: "Quarta-feira", abbr: "Q" },
+  { id: 4, name: "Quinta-feira", abbr: "Q" },
+  { id: 5, name: "Sexta-feira", abbr: "S" },
+  { id: 6, name: "Sábado", abbr: "S" },
+]);
+
+async function handleCreateAd() {
+  // const formData = new FormData(event.target as HTMLFormElement);
+  // const data = Object.fromEntries(formData);
+
+  // if (!data.name) {
+  //   return;
+  // }
+
+  try {
+    // const currentSelectedGame = games.value.find((x) => x.title === selected);
+
+    // const response = await axios.post(
+    //   `http://localhost:3333/games/${currentSelectedGame?.id}/ads`,
+    //   {
+    //     name: data.name,
+    //     yearsPlaying: Number(data.yearsPlaying),
+    //     discord: data.discord,
+    //     weekDays: selectedWeekDays.value.map((item: any) => item.id),
+    //     hourStart: data.hourStart,
+    //     hourEnd: data.hourEnd,
+    //     useVoiceChannel: isChecked,
+    //   }
+    // );
+
+    console.log(data.value);
+
+    alert("Anúncio criado com sucesso!");
+  } catch (err) {
+    console.log(err);
+    alert("Erro ao criar anúncio!");
+  }
+}
 </script>
 
 <style scoped>
