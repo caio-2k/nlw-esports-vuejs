@@ -2,13 +2,15 @@
   <div class="max-w-7xl mx-auto flex flex-col items-center my-20">
     <img :src="logoImg" alt="Logo NLW" />
 
-    <h1 class="text-6xl text-white font-black mt-20">
+    <h1 class="text-6xl text-white font-black mt-20 text-center">
       Seu
       <span class="bg-nlw-gradient bg-clip-text text-transparent"> duo </span>
       está aqui!
     </h1>
 
-    <div class="grid grid-cols-6 gap-6 mt-16">
+    <div
+      class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 mt-16 px-10 2xl:px-0"
+    >
       <GameBanner
         v-for="game in games"
         :key="game.id"
