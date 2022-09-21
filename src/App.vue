@@ -28,6 +28,7 @@ import logoImg from "./assets/logo-nlw.svg";
 import GameBanner from "./components/GameBanner.vue";
 import type { Games } from "@/types";
 import CreateAdBanner from "./components/CreateAdBanner.vue";
+import axios from "axios";
 
 onMounted(() => {
   getGames();
@@ -36,11 +37,9 @@ onMounted(() => {
 const games = ref<Games[]>([]);
 
 const getGames = async () => {
-  fetch("http://localhost:3333/games")
-    .then((response) => response.json())
-    .then((data) => {
-      games.value = data;
-    });
+  axios("http://localhost:3333/games").then((response) => {
+    games.value = response.data;
+  });
 };
 </script>
 

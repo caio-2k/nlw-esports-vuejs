@@ -12,7 +12,7 @@
         <DialogPanel
           class="bg-[#2A2634] py-8 px-10 text-white rounded-lg w-[480px] shadow-lg shadow-black/25"
         >
-          <DialogTitle as="h3" class="text-3xl font-black">
+          <DialogTitle as="h1" class="text-3xl font-black">
             Publique um anúncio
           </DialogTitle>
           <form
@@ -22,7 +22,7 @@
             <div class="flex flex-col gap-2">
               <label htmlFor="game">Qual o game?</label>
               <FormSelect
-                v-model="selectedGame"
+                v-model="data.selectedGame"
                 :my-arr="games"
                 :filter-by="(data: any) => data.title"
                 placeholder="Selecione um game"
@@ -64,7 +64,7 @@
                   Quando costuma jogar?
                 </label>
                 <FormSelectMultiple
-                  v-model="selectedWeekDays"
+                  v-model="data.selectedWeekDays"
                   :my-arr="weekDays"
                   :filter-by="(data) => data.name"
                   :filter-value="(data) => data.abbr"
@@ -92,8 +92,8 @@
 
             <div class="mt-2 flex gap-2 text-sm">
               <FormCheckbox
-                v-model:checked="isChecked"
-                labelText="Costumo utilizar o voicechat"
+                v-model:checked="data.voiceChannel"
+                labelText="Costumo me conectar ao chat de voz"
               />
             </div>
 
@@ -107,7 +107,7 @@
               </button>
               <button
                 type="submit"
-                class="bg-violet-500 px-5 h-12 rounded-md font-semibold flex items-center gap-3 hover:bg-violet-600 transition-colors"
+                class="bg-violet-700 px-5 h-12 rounded-md font-semibold flex items-center gap-3 hover:bg-violet-800 transition-colors"
               >
                 <PhGameController size="24" />
                 Encontrar duo
@@ -147,31 +147,25 @@ onMounted(() => {
 const games = ref<Game[]>([]);
 
 const getGames = async () => {
-  fetch("http://localhost:3333/games")
-    .then((response) => response.json())
-    .then((data) => {
-      games.value = data;
-    });
+  axios("http://localhost:3333/games").then((response) => {
+    games.value = response.data;
+  });
 };
 
 const data = ref({
-  gamePick: "" as string,
+  selectedGame: "" as string,
   userName: "" as string,
   yearsPlayed: "" as string,
   discordName: "" as string,
-  playDay: [""] as Array<string>,
+  selectedWeekDays: [] as Array<string>,
   dayHourStart: "" as string,
   dayHourEnd: "" as string,
   voiceChannel: false as boolean,
 });
 
-const selectedGame = ref<string>();
-const selectedWeekDays = ref([]);
-const isChecked = ref<boolean>(false);
-
-// const currentSelectedGame = computed(() => {
-//   return games.value.find((x) => x.id == selectedGame.value);
-// });
+const currentSelectedGame = computed(() => {
+  return games.value.find((x) => x.title == data.value.selectedGame);
+});
 
 const weekDays = ref([
   { id: 0, name: "Domingo", abbr: "D" },
@@ -184,30 +178,23 @@ const weekDays = ref([
 ]);
 
 async function handleCreateAd() {
-  // const formData = new FormData(event.target as HTMLFormElement);
-  // const data = Object.fromEntries(formData);
-
-  // if (!data.name) {
-  //   return;
-  // }
+  if (!data.value.userName) {
+    return;
+  }
 
   try {
-    // const currentSelectedGame = games.value.find((x) => x.title === selected);
-
-    // const response = await axios.post(
-    //   `http://localhost:3333/games/${currentSelectedGame?.id}/ads`,
-    //   {
-    //     name: data.name,
-    //     yearsPlaying: Number(data.yearsPlaying),
-    //     discord: data.discord,
-    //     weekDays: selectedWeekDays.value.map((item: any) => item.id),
-    //     hourStart: data.hourStart,
-    //     hourEnd: data.hourEnd,
-    //     useVoiceChannel: isChecked,
-    //   }
-    // );
-
-    console.log(data.value);
+    const response = await axios.post(
+      `http://localhost:3333/games/${currentSelectedGame.value?.id}/ads`,
+      {
+        name: data.value.userName,
+        yearsPlaying: Number(data.value.yearsPlayed),
+        discord: data.value.discordName,
+        weekDays: data.value.selectedWeekDays.map((item: any) => item.id),
+        hourStart: data.value.dayHourStart,
+        hourEnd: data.value.dayHourEnd,
+        useVoiceChannel: data.value.voiceChannel,
+      }
+    );
 
     alert("Anúncio criado com sucesso!");
   } catch (err) {

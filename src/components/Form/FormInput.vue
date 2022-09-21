@@ -5,16 +5,13 @@
     "
     :id="id"
     :placeholder="placeholder"
-    :class="
-      props.type === 'checkbox'
-        ? 'accent-green-600 text-white w-4 h-4'
-        : 'bg-zinc-900 py-3 px-4 rounded text-sm placeholder:text-zinc-500'
-    "
+    :type="type"
+    class="bg-zinc-900 py-3 px-4 rounded text-sm placeholder:text-zinc-300"
   />
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{
+defineProps<{
   modelValue: string | boolean;
   placeholder?: string;
   type?: string;
